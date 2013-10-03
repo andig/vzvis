@@ -79,18 +79,18 @@ var cache = (function() {
 		$('#invalidApiKey').show();
 	}
 
-	function vzFetch(key, worker, deferred, hash) {
+	function fetchCached(key, worker, deferred, hash) {
 		console.log(key+" "+worker+" "+deferred+" "+hash);
 		var json = cache.get(key, hash);
 
 		if (json) {
-			// console.log("-- vzFetch cached -- " + JSON.stringify(json));
+			// console.log("-- fetchCached cached -- " + JSON.stringify(json));
 			worker(json);
 			return;
 		}
 
-		deferred.done(function(json) {
-			// console.log("-- vzFetch deferred -- " + key + " " + JSON.stringify(json));
+		deferred().done(function(json) {
+			// console.log("-- fetchCached deferred -- " + key + " " + JSON.stringify(json));
 			cache.put(key, json, hash);
 			worker(json);
 		});
@@ -308,16 +308,22 @@ var cache = (function() {
 
 		// TODO failure handling .fail(failHandler)
 		var url = middleware + 'capabilities/definitions.json?padding=?';
-		vzFetch("xmon.definitions", setDefinitions, $.getJSON(url), url);
+		fetchCached("xmon.definitions", setDefinitions, function() {
+			return $.getJSON(url);
+		}, url);
 
 		var url = middleware;
 		if (channels) {
 			url += "entity/" + channels + ".json?padding=?";
-			vzFetch("xmon.channel." + channels, setSingleChannel, $.getJSON(url).fail(failHandler), url);
+			fetchCached("xmon.channel." + channels, setSingleChannel, function() {
+				return $.getJSON(url).fail(failHandler);
+			}, url);
 		}
 		else {
 			url += "channel.json?padding=?";
-			vzFetch("xmon.channels", setChannels, $.getJSON(url).fail(failHandler), url);
+			fetchCached("xmon.channels", setChannels, function() {
+				return $.getJSON(url).fail(failHandler);
+			}, url);
 		}
 	}
 
