@@ -79,18 +79,18 @@ var cache = (function() {
 		$('#invalidApiKey').show();
 	}
 
-	function vzFetch(key, worker, deferred, hash) {
+	function fetchCached(key, worker, deferred, hash) {
 		console.log(key+" "+worker+" "+deferred+" "+hash);
 		var json = cache.get(key, hash);
 
 		if (json) {
-			// console.log("-- vzFetch cached -- " + JSON.stringify(json));
+			// console.log("-- fetchCached cached -- " + JSON.stringify(json));
 			worker(json);
 			return;
 		}
 
-		deferred.done(function(json) {
-			// console.log("-- vzFetch deferred -- " + key + " " + JSON.stringify(json));
+		deferred().done(function(json) {
+			// console.log("-- fetchCached deferred -- " + key + " " + JSON.stringify(json));
 			cache.put(key, json, hash);
 			worker(json);
 		});
@@ -112,7 +112,7 @@ var cache = (function() {
 		$('#datastream-' + channel.uuid).remove();
 		$('#feed-' + channel.uuid + ' .datastream.hidden').clone().appendTo('#feed-' + channel.uuid + ' .datastreams').attr('id', 'datastream-' + channel.uuid).removeClass('hidden');
 
-		var url = middleware + "data/" + channel.uuid + ".json?padding=?&from=" + then.format(dateTime) + "&to=now&tuples=200";
+		var url = middleware + "data/" + channel.uuid + ".json?from=" + then.format(dateTime) + "&to=now&tuples=200";
 		console.log("-- url -- " + url);
 
 		$.getJSON(url, function(json) {
@@ -307,17 +307,23 @@ var cache = (function() {
 		$('#apiInput').val(middleware);
 
 		// TODO failure handling .fail(failHandler)
-		var url = middleware + 'capabilities/definitions.json?padding=?';
-		vzFetch("xmon.definitions", setDefinitions, $.getJSON(url), url);
+		var url = middleware + 'capabilities/definitions.json';
+		fetchCached("xmon.definitions", setDefinitions, function() {
+			return $.getJSON(url);
+		}, url);
 
 		var url = middleware;
 		if (channels) {
-			url += "entity/" + channels + ".json?padding=?";
-			vzFetch("xmon.channel." + channels, setSingleChannel, $.getJSON(url).fail(failHandler), url);
+			url += "entity/" + channels + ".json";
+			fetchCached("xmon.channel." + channels, setSingleChannel, function() {
+				return $.getJSON(url).fail(failHandler);
+			}, url);
 		}
 		else {
-			url += "channel.json?padding=?";
-			vzFetch("xmon.channels", setChannels, $.getJSON(url).fail(failHandler), url);
+			url += "channel.json";
+			fetchCached("xmon.channels", setChannels, function() {
+				return $.getJSON(url).fail(failHandler);
+			}, url);
 		}
 	}
 
