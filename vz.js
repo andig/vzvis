@@ -112,7 +112,7 @@ var cache = (function() {
 		$('#datastream-' + channel.uuid).remove();
 		$('#feed-' + channel.uuid + ' .datastream.hidden').clone().appendTo('#feed-' + channel.uuid + ' .datastreams').attr('id', 'datastream-' + channel.uuid).removeClass('hidden');
 
-		var url = middleware + "data/" + channel.uuid + ".json?padding=?&from=" + then.format(dateTime) + "&to=now&tuples=200";
+		var url = middleware + "data/" + channel.uuid + ".json?from=" + then.format(dateTime) + "&to=now&tuples=200";
 		console.log("-- url -- " + url);
 
 		$.getJSON(url, function(json) {
@@ -307,20 +307,20 @@ var cache = (function() {
 		$('#apiInput').val(middleware);
 
 		// TODO failure handling .fail(failHandler)
-		var url = middleware + 'capabilities/definitions.json?padding=?';
+		var url = middleware + 'capabilities/definitions.json';
 		fetchCached("xmon.definitions", setDefinitions, function() {
 			return $.getJSON(url);
 		}, url);
 
 		var url = middleware;
 		if (channels) {
-			url += "entity/" + channels + ".json?padding=?";
+			url += "entity/" + channels + ".json";
 			fetchCached("xmon.channel." + channels, setSingleChannel, function() {
 				return $.getJSON(url).fail(failHandler);
 			}, url);
 		}
 		else {
-			url += "channel.json?padding=?";
+			url += "channel.json";
 			fetchCached("xmon.channels", setChannels, function() {
 				return $.getJSON(url).fail(failHandler);
 			}, url);
